@@ -5118,34 +5118,23 @@ d3.layout.chord = function() {
         // First check for relationships where i is the source, as they should come first.
         j = 0;
         relationships.forEach(function(rel) {
-          if (rel.source !== i || rel.value === 0) return;
-          gp.value += rel.value;
-          chd = subgroups[i + '-' + rel.target] || (subgroups[i + '-' + rel.target] = {});
-          chd.source = {
-            index: i,
-            subindex: j,
-            startAngle: x,
-            endAngle: x += (rel.value * k),
-            value: rel.value
-          };
-          // Special handling for self-targetting relationships.
-          if (rel.target === i) chd.target = chd.source;
-          j++;
-        });
-        // Then check for relationships where i is the target.
-        relationships.forEach(function(rel) {
-          if (rel.source === i) return; // This special case was handled above.
-          if (rel.target !== i || rel.value === 0) return;
-          gp.value += rel.value;
-          chd = subgroups[rel.source + '-' + i] || (subgroups[rel.source + '-' + i] = {});
-          chd.target = {
-            index: i,
-            subindex: j,
-            startAngle: x,
-            endAngle: x += (rel.value * k),
-            value: rel.value
-          };
-          j++;
+          if (rel.value === 0) return;
+          var s2t = rel.source === i, t2s = rel.target === i;
+          if (s2t || t2s) {
+            gp.value += rel.value;
+            var subgrpIdx = s2t ? i + '-' + rel.target : rel.source + '-' + i;
+            chd = subgroups[subgrpIdx] || (subgroups[subgrpIdx] = {});
+            chd[s2t ? "source" : "target"] = {
+              index: i,
+              subindex: j,
+              startAngle: x,
+              endAngle: x += (rel.value * k),
+              value: rel.value
+            };
+            // Special handling for self-targetting relationships.
+            if (s2t && rel.target === i) chd.target = chd.source;
+            j++;
+          }
         });
         // If the group value has increased beyond zero, calculate endAngle and add to groups.
         if (!gp.value) continue;
